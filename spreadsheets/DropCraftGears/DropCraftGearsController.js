@@ -1,5 +1,5 @@
 const authSpreadsheet = require('../Auth/AuthSpreadsheet')
-const headgearsFilter = require('./HeadgearsFilter')
+const dropCraftGearsFilter = require('./DropCraftGearsFilter')
 var firebase = require("firebase");
 
 var config = {
@@ -17,20 +17,21 @@ authSpreadsheet.openSheet().then(function (result) {
     const sheets = result;
     sheets.spreadsheets.values.get({
         spreadsheetId: '1Jof-XLzLAd-wXRW6Z1S3sqUuTX7PL0cqEISdQynRiT4',
-        range: 'Headgears',
+        range: 'Drop & Craft Gears',
         valueRenderOption: 'Formula'
     }, (err, res) => {
         if (err) return console.log('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
-            var headgearList = headgearsFilter.filterHeadgearList(rows);
-            firebase.database().ref('headgears').set(headgearList).then((result, err) => {
-                if (err) {
-                    console.log(err);
-                } else {
-                    console.log(`Push successfully: ${result}`);
-                }
-            });
+            dropCraftGearsFilter.filterDropCraftGearsList(rows);
+            // var dropCraftGearsList = []
+            // firebase.database().ref('drop_craft_gears').set(dropCraftGearsList).then((result, err) => {
+            //     if (err) {
+            //         console.log(err);
+            //     } else {
+            //         console.log(`Push successfully: ${result}`);
+            //     }
+            // });
         } else {
             console.log('No data found.');
         }
