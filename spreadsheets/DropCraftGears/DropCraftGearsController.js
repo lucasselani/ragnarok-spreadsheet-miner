@@ -23,8 +23,7 @@ authSpreadsheet.openSheet().then(function (result) {
         if (err) return console.log('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
-            var dropCraftGearsList = dropCraftGearsFilter.filterDropCraftGearsList(rows)
-//            console.log(dropCraftGearsList);
+            var dropCraftGearsList = dropCraftGearsFilter.filterDropCraftGearsList(rows);
             firebase.database().ref('drop_craft_gears').set(dropCraftGearsList).then((result, err) => {
                 if (err) {
                     console.log(err);
