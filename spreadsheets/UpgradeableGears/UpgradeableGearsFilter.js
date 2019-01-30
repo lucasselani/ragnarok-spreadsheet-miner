@@ -64,10 +64,11 @@ function createUpgradeableGearList(rows) {
         var upgrades = [];
         var final = new upgradeableGear.final();
         row.forEach((cell, index) => {
-            if (step == 'base') {
-                createBaseGear(base, cell, index);
+            if (step == 'base') {                
                 if (cell == 'I') {
                     step = 'I'
+                } else {
+                    createBaseGear(base, cell, index);
                 }
             }
 
