@@ -1,50 +1,59 @@
-var dropCraftGear = require('./DropCraftGear');
+var upgradeableGear = require('./UpgradeableGear');
 
 function filterObjectRow(rows) {
     var firstLine = true;
-    var objectCounter = 0;
-    var objectRow = [];
-    var firstRow;
-    var secondRow;
+    var firstValue = true;
+    var arrayCounter = 0;
+    var objectRow = {};
     rows.forEach((row) => {
         if (row.length) {
+            if (firstLine) {
+                row.forEach(cell => {
+                    if (cell.includes('Weapon')) {
+                        firstLine = false;
+                    }
+                });
+            }
+
             if (!firstLine) {
-                objectCounter++;
-                if (objectCounter == 1) {
-                    firstRow = row;
-                } else if (objectCounter == 2) {
-                    secondRow = row;
-                } else {
-                    var finalRow = firstRow.concat(secondRow).concat(row);
-                    objectRow.push(finalRow);
-                    objectCounter = 0;
+                if (firstValue) {
+                    objectRow[arrayCounter] = [];
+                    firstValue = false;
                 }
-            } else {
-                firstLine = false;
+                objectRow[arrayCounter].push(row);
+                row.forEach(cell => {
+                    if (cell.includes('Final')) {
+                        if (!firstValue) arrayCounter++;
+                        firstValue = true;
+                    }
+                })
             }
         }
     });
     return objectRow;
 }
 
-function removeTrashFromArray(rows) {
-    var newRows = []
-    rows.forEach((row) => {
-        var newCells = []
-        row.forEach((cell) => {
-            if (cell.length) {
-                cells = cell.split('\n');
-                cells.forEach((splittedCell) => {
-                    splittedCell.replace(/(\r\n|\n|\r)/gm, "");
-                    if (/\d|\w/.test(splittedCell) && !splittedCell.includes('*')) {
-                        newCells.push(splittedCell);
-                    }
-                })
-            }
+function removeTrashFromArray(objectRows) {
+    var newObject = [];
+    for (var index = 0; index < Object.keys(objectRows).length; index++) {
+        var newRows = [];
+        var rows = objectRows[index];
+        rows.forEach((row) => {
+            row.forEach((cell) => {
+                if (cell.length) {
+                    cells = cell.split('\n');
+                    cells.forEach((splittedCell) => {
+                        splittedCell.replace(/(\r\n|\n|\r)/gm, "");
+                        if (/\d|\w/.test(splittedCell) && !splittedCell.includes('*')) {
+                            newRows.push(splittedCell);
+                        }
+                    })
+                }
+            });
         });
-        newRows.push(newCells);
-    });
-    return newRows;
+        newObject.push(newRows);
+    }
+    return newObject;
 }
 
 function createDropCraftGearList(rows) {
@@ -76,7 +85,7 @@ function createDropCraftGearList(rows) {
                 }
             } else if (name != '' && icon == '' && cell.includes('IMAGE')) {
                 icon = cell.split('"')[1];
-            } else if (type != '' && name != '' && icon != '' && 
+            } else if (type != '' && name != '' && icon != '' &&
                 (!monstersImg.length && !materialsImg.length) &&
                 (!cell.includes('Craft') && !cell.includes('IMAGE') && !cell.includes('?'))) {
                 cell = cell.substring(1).trim();
@@ -118,10 +127,11 @@ function createDropCrafGear(type, subtype, name, icon, stats, craft, release, ma
 }
 
 module.exports = {
-    filterDropCraftGearsList: function (rows) {
-        rows = filterObjectRow(rows);
-        rows = removeTrashFromArray(rows);
-        return createDropCraftGearList(rows);
+    filterUpgradeableGearsList: function (rows) {
+        objectRows = filterObjectRow(rows);
+        objectRows = removeTrashFromArray(objectRows);
+        console.log(objectRows);
+        //return createDropCraftGearList(rows);
     }
 }
 
