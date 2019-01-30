@@ -63,7 +63,7 @@ function createHeadgearList(rows) {
                 icon = cell.split('"')[1];
             } else if (name != '' && icon != '' && craft == '' && achiev == '' &&
                 (!monstersImg.length && !materialsImg.length) &&
-                (!cell.includes('Craft') && (!cell.includes('IMAGE')))) {
+                (!cell.includes('Craft') && !cell.includes('IMAGE'))) {
                 stats.push(cell);
             } else if (cell.includes('Craft')) {
                 craft = cell.split(':')[1].trim();

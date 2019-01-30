@@ -1,3 +1,5 @@
+var dropCraftGear = require('./DropCraftGear');
+
 function filterObjectRow(rows) {
     var firstLine = true;
     var objectCounter = 0;
@@ -45,39 +47,49 @@ function removeTrashFromArray(rows) {
     return newRows;
 }
 
-// TODO TROCAR PARA DROPCRAFT
-function createHeadgearList(rows) {
-    var headgearList = []
+function createDropCraftGearList(rows) {
+    var dropCraftGearList = []
     rows.forEach(row => {
+        var type = '';
+        var subtype = '';
         var name = '';
         var icon = '';
         var stats = [];
         var craft = '';
-        var achiev = '';
+        var release = '';
         var materialsImg = [];
         var monstersImg = [];
         var materialsTxt = [];
         var monstersTxt = [];
         row.forEach((cell, index) => {
-            if (index == 0 && name == '') {
-                name = cell;
+            if (index == 0 && type == '') {
+                var cells = cell.split('-');
+                type = cells[0].trim();
+                if (cells.length > 1) {
+                    subtype = cells[1].trim();
+                }
+            } else if (name == '' && type != '') {
+                if (cell.includes('EP')) {
+                    release = cell;
+                } else {
+                    name = cell;
+                }
             } else if (name != '' && icon == '' && cell.includes('IMAGE')) {
                 icon = cell.split('"')[1];
-            } else if (name != '' && icon != '' && craft == '' && achiev == '' &&
+            } else if (type != '' && name != '' && icon != '' && 
                 (!monstersImg.length && !materialsImg.length) &&
-                (!cell.includes('Craft') && (!cell.includes('IMAGE')))) {
+                (!cell.includes('Craft') && !cell.includes('IMAGE') && !cell.includes('?'))) {
+                cell = cell.substring(1).trim();
                 stats.push(cell);
             } else if (cell.includes('Craft')) {
                 craft = cell.split(':')[1].trim();
-            } else if (cell.includes('Achievement')) {
-                achiev = cell;
             } else if (cell.includes('IMAGE')) {
                 if (cell.includes('monsters') && !monstersImg.length) {
                     monstersImg.push(cell.split('"')[1]);
                 } else {
                     materialsImg.push(cell.split('"')[1]);
                 }
-            } else if (name && icon && !cell.includes('No information')) {
+            } else if (name && icon && !cell.includes('No information') && !cell.includes('?')) {
                 if ((/\d/.test(cell) || monstersTxt.length) && materialsImg.length) {
                     materialsTxt.push(cell);
                 } else if (monstersImg.length) {
@@ -85,31 +97,32 @@ function createHeadgearList(rows) {
                 }
             }
         });
-        var headgear = createHeadgear(name, icon, stats, craft, achiev, materialsImg, monstersImg, materialsTxt, monstersTxt);
-        headgearList.push(headgear);
+        var dropCraftGear = createDropCrafGear(type, subtype, name, icon, stats, craft, release, materialsImg, monstersImg, materialsTxt, monstersTxt);
+        dropCraftGearList.push(dropCraftGear);
     });
-    return headgearList;
+    return dropCraftGearList;
 }
 
-function createHeadgear(name, icon, stats, craft, achiev, materialsImg, monstersImg, materialsTxt, monstersTxt) {
+function createDropCrafGear(type, subtype, name, icon, stats, craft, release, materialsImg, monstersImg, materialsTxt, monstersTxt) {
     var objectMaterials = []
     for (var i = 0; i < materialsImg.length; i++) {
-        var material = new headgear.material(materialsTxt[i], materialsImg[i]);
+        var material = new dropCraftGear.material(materialsTxt[i], materialsImg[i]);
         objectMaterials.push(material);
     }
     var objectMonsters = []
     for (var i = 0; i < monstersImg.length; i++) {
-        var monster = new headgear.monster(monstersTxt[i], monstersImg[i]);
+        var monster = new dropCraftGear.monster(monstersTxt[i], monstersImg[i]);
         objectMonsters.push(monster);
     }
-    return new headgear.headgear(name, icon, stats, craft, achiev, objectMaterials, objectMonsters);
+    return new dropCraftGear.dropCraftGear(type, subtype, name, icon, stats, craft, release, objectMaterials, objectMonsters);
 }
 
 module.exports = {
     filterDropCraftGearsList: function (rows) {
         rows = filterObjectRow(rows);
         rows = removeTrashFromArray(rows);
-        console.log(rows);
+        //console.log(rows);
+        return createDropCraftGearList(rows);
     }
 }
 

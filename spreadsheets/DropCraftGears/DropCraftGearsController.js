@@ -23,15 +23,15 @@ authSpreadsheet.openSheet().then(function (result) {
         if (err) return console.log('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
-            dropCraftGearsFilter.filterDropCraftGearsList(rows);
-            // var dropCraftGearsList = []
-            // firebase.database().ref('drop_craft_gears').set(dropCraftGearsList).then((result, err) => {
-            //     if (err) {
-            //         console.log(err);
-            //     } else {
-            //         console.log(`Push successfully: ${result}`);
-            //     }
-            // });
+            var dropCraftGearsList = dropCraftGearsFilter.filterDropCraftGearsList(rows)
+//            console.log(dropCraftGearsList);
+            firebase.database().ref('drop_craft_gears').set(dropCraftGearsList).then((result, err) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(`Push successfully: ${result}`);
+                }
+            });
         } else {
             console.log('No data found.');
         }
