@@ -44,7 +44,7 @@ function removeTrashFromArray(objectRows) {
                     cells = cell.split('\n');
                     cells.forEach((splittedCell) => {
                         splittedCell.replace(/(\r\n|\n|\r)/gm, "");
-                        if (/\d|\w/.test(splittedCell) && !splittedCell.includes('*')) {
+                        if (/\d|\w|\?/.test(splittedCell) && !splittedCell.includes('*')) {
                             newRows.push(splittedCell);
                         }
                     })
@@ -56,82 +56,142 @@ function removeTrashFromArray(objectRows) {
     return newObject;
 }
 
-function createDropCraftGearList(rows) {
-    var dropCraftGearList = []
+function createUpgradeableGearList(rows) {
+    var upgradeableGearList = []
     rows.forEach(row => {
-        var type = '';
-        var subtype = '';
-        var name = '';
-        var icon = '';
-        var stats = [];
-        var craft = '';
-        var release = '';
-        var materialsImg = [];
-        var monstersImg = [];
-        var materialsTxt = [];
-        var monstersTxt = [];
+        var step = 'base'
+        var base = new upgradeableGear.base();
+        var upgrades = [];
+        var final = new upgradeableGear.final();
         row.forEach((cell, index) => {
-            if (index == 0 && type == '') {
-                var cells = cell.split('-');
-                type = cells[0].trim();
-                if (cells.length > 1) {
-                    subtype = cells[1].trim();
-                }
-            } else if (name == '' && type != '') {
-                if (cell.includes('EP')) {
-                    release = cell;
-                } else {
-                    name = cell;
-                }
-            } else if (name != '' && icon == '' && cell.includes('IMAGE')) {
-                icon = cell.split('"')[1];
-            } else if (type != '' && name != '' && icon != '' &&
-                (!monstersImg.length && !materialsImg.length) &&
-                (!cell.includes('Craft') && !cell.includes('IMAGE') && !cell.includes('?'))) {
-                cell = cell.substring(1).trim();
-                stats.push(cell);
-            } else if (cell.includes('Craft')) {
-                craft = cell.split(':')[1].trim();
-            } else if (cell.includes('IMAGE')) {
-                if (cell.includes('monsters') && !monstersImg.length) {
-                    monstersImg.push(cell.split('"')[1]);
-                } else {
-                    materialsImg.push(cell.split('"')[1]);
-                }
-            } else if (name && icon && !cell.includes('No information') && !cell.includes('?')) {
-                if ((/\d/.test(cell) || monstersTxt.length) && materialsImg.length) {
-                    materialsTxt.push(cell);
-                } else if (monstersImg.length) {
-                    monstersTxt.push(cell);
+            if (step == 'base') {
+                createBaseGear(base, cell, index);
+                if (cell == 'I') {
+                    step = 'I'
                 }
             }
+
+            if (step == 'I') {
+                if (cell == 'II') {
+                    step = 'II'
+                } else {
+                    createGearUpgrades(upgrades, final, cell, step);
+                }
+            }
+
+            if (step == 'II') {
+                if (cell == 'III') {
+                    step = 'III';
+                } else {
+                    createGearUpgrades(upgrades, final, cell, step);
+                }
+            }
+
+            if (step === 'III') {
+                if (cell == 'Final') {
+                    step = 'Final';
+                } else {
+                    createGearUpgrades(upgrades, final, cell, step);
+                }
+            }
+
+            if (step == 'Final') {
+                createFinalGear(final, cell, step);
+            }
         });
-        var dropCraftGear = createDropCrafGear(type, subtype, name, icon, stats, craft, release, materialsImg, monstersImg, materialsTxt, monstersTxt);
-        dropCraftGearList.push(dropCraftGear);
+        var upgradeableGearObject = new upgradeableGear.upgradeableGear(base, upgrades, final);
+        upgradeableGearList.push(upgradeableGearObject);
     });
-    return dropCraftGearList;
+    return upgradeableGearList;
 }
 
-function createDropCrafGear(type, subtype, name, icon, stats, craft, release, materialsImg, monstersImg, materialsTxt, monstersTxt) {
-    var objectMaterials = []
-    for (var i = 0; i < materialsImg.length; i++) {
-        var material = new dropCraftGear.material(materialsTxt[i], materialsImg[i]);
-        objectMaterials.push(material);
+function createBaseGear(base, cell, index) {
+    if (isLevel(cell)) {
+        base.level = cell;
+    } else if (index == 0 && base.type == '') {
+        base.type = cell;
+    } else if (base.type == 'Weapon' && index == 1) {
+        base.subtype = cell
+    } else if (base.name == '' && cell.includes('EP')) {
+        base.release = cell;
+    } else if (base.name == '' && base.type != '') {
+        base.name = cell;
+    } else if (base.name != '' && base.icon == '' && cell.includes('IMAGE')) {
+        base.icon = cell.split('"')[1];
+    } else if (base.type != '' && base.name != '' && base.icon != '' && !base.stats.length && !base.materials.length &&
+        (!cell.includes('Craft') && !cell.includes('Crack') && !cell.includes('IMAGE') && !cell.includes('?') && !cell.includes('zeny'))) {
+        var cells = cell.split(',');
+        cells.forEach(value => {
+            base.stats.push(value.trim());
+        });
+    } else if (cell.includes('Craft') || cell.includes('Crack')) {
+        cell.replace('Crack', 'Craft');
+        base.craftLocation = cell.split(':')[1].trim();
+    } else if (cell.includes('zeny') || cell.includes('?')) {
+        base.price = cell;
+    } else if (base.name != '' && base.icon != '' && base.type != '' && base.stats.length) {
+        base.materials.push(cell);
     }
-    var objectMonsters = []
-    for (var i = 0; i < monstersImg.length; i++) {
-        var monster = new dropCraftGear.monster(monstersTxt[i], monstersImg[i]);
-        objectMonsters.push(monster);
+}
+
+function createGearUpgrades(upgrades, final, cell, step) {
+    if ((step == 'I' || step == 'II' || step == 'III') && cell == step) {
+        var newUpgrade = new upgradeableGear.upgrade();
+        upgrades.push(newUpgrade);
     }
-    return new dropCraftGear.dropCraftGear(type, subtype, name, icon, stats, craft, release, objectMaterials, objectMonsters);
+
+    if (upgrades.length) {
+        var upgrade = upgrades[upgrades.length - 1];
+    }
+
+    if (isLevel(cell)) {
+        upgrade.level = cell;
+    } else if (cell.includes('zeny')) {
+        upgrade.price = cell;
+    } else if (cell.includes('Upgrade')) {
+        upgrade.upgradeLocation = cell.split(':')[1].trim();
+    } else if (upgrade.step != '' && !upgrade.stats.length && !upgrade.materials.length) {
+        var cells = cell.split(',');
+        cells.forEach(value => {
+            upgrade.stats.push(value.trim());
+        });
+    } else if (upgrade.level == 'II' && upgrade.materials.length && upgrade.price != '') {
+        if (cell.includes('IMAGE')) {
+            final.icon = cell.split('"')[1].trim();
+        } else if (final.name == '') {
+            final.name = cell;
+        }
+    } else {
+        upgrade.materials.push(cell);
+    }
+}
+
+function createFinalGear(final, cell) {
+    if(isLevel(cell)) {
+        final.level = cell;
+    } else if (!final.stats.length && !final.materials.length) {
+        var cells = cell.split(',');
+        cells.forEach(value => {
+            final.stats.push(value.trim());
+        });
+    } else if (cell.includes('zeny')) {
+        final.price = cell;
+    } else if (cell.includes("Upgrade")) {
+        final.upgradeLocation = cell;
+    } else {
+        final.materials.push(cell);
+    }
+}
+
+function isLevel(value) {
+    return value == "Base" || value == "I" || value == "II" || value == "III" || value == "Final";
 }
 
 module.exports = {
     filterUpgradeableGearsList: function (rows) {
         objectRows = filterObjectRow(rows);
         objectRows = removeTrashFromArray(objectRows);
-        console.log(objectRows);
-        //return createDropCraftGearList(rows);
+        return createUpgradeableGearList(objectRows);
     }
 }
 

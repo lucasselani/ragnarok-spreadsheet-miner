@@ -24,14 +24,13 @@ authSpreadsheet.openSheet().then(function (result) {
         const rows = res.data.values;
         if (rows.length) {
             var upgradeableGearsList = upgradeableGearsFilter.filterUpgradeableGearsList(rows);
-            //console.log(upgradeableGearsList);
-            // firebase.database().ref('upgradeable_gears').set(upgradeableGearsList).then((result, err) => {
-            //     if (err) {
-            //         console.log(err);
-            //     } else {
-            //         console.log(`Push successfully: ${result}`);
-            //     }
-            // });
+            firebase.database().ref('upgradeable_gears').set(upgradeableGearsList).then((result, err) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(`Push successfully: ${result}`);
+                }
+            });
         } else {
             console.log('No data found.');
         }

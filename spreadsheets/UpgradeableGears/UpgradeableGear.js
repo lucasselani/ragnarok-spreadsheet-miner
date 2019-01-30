@@ -1,23 +1,38 @@
 module.exports = {
-    dropCraftGear: function(type, subtype, name, icon, stats, craftLocation, release, materials, monsters) {
-        this.type = type;
-        this.subtype = subtype;
-        this.name = name;
-        this.icon = icon;
-        this.stats = stats;
-        this.craftLocation = craftLocation;
-        this.release = release;
-        this.materials = materials;
-        this.monsters = monsters;
+    upgradeableGear: function(base, upgrades, final) {
+        this.base = base;
+        this.upgrades = upgrades;
+        this.final = final;
     },
 
-    material: function(name, image) {
-        this.name = name;
-        this.image = image;
+    upgrade: function(level) {
+        this.level = level;
+        this.stats = [];
+        this.price = '';
+        this.materials = [];
+        this.upgradeLocation = '';
     },
 
-    monster: function(name, image) {
-        this.name = name;
-        this.image = image;
+    final: function(level) {
+        this.name = '';
+        this.icon = '';
+        this.stats = [];
+        this.materials = [];
+        this.price = '';
+        this.upgradeLocation = '';
+        this.level = level;
+    },
+
+    base: function(level) {
+        this.type = '';
+        this.subtype = '';
+        this.name = '';
+        this.icon = '';
+        this.stats = [];
+        this.craftLocation = '';
+        this.release = '';
+        this.materials = [];
+        this.price = '';
+        this.level = level;
     }
 }
