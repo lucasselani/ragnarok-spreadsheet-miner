@@ -43,20 +43,27 @@ function createSetComboList(rows) {
     rows.forEach(row => {
         var setCombo = {
             items: [],
-            stats: [],
-            icons: []
+            stats: []
         };
+        var itemsList = [];
+        var iconsList = [];
         row.forEach(cell => {
-            if(cell.includes('IMAGE')) {
-                setCombo.icons.push(cell.split('"')[1].trim());
+            if (cell.includes('IMAGE')) {
+                iconsList.push(cell.split('"')[1].trim());
             } else {
-                if(setCombo.icons.length) {
-                    setCombo.items.push(cell);
+                if (iconsList.length) {
+                    itemsList.push(cell);
                 } else {
                     setCombo.stats.push(cell);
                 }
             }
         });
+        for (var i = 0; i < itemsList.length; i++) {
+            setCombo.items.push({
+                name: itemsList[i],
+                icon: iconsList[i]
+            });
+        }
         setComboList.push(setCombo);
     });
     return setComboList;

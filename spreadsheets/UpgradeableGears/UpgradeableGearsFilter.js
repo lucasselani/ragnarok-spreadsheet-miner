@@ -64,7 +64,7 @@ function createUpgradeableGearList(rows) {
         var upgrades = [];
         var final = new upgradeableGear.final();
         row.forEach((cell, index) => {
-            if (step == 'base') {                
+            if (step == 'base') {
                 if (cell == 'I') {
                     step = 'I'
                 } else {
@@ -110,8 +110,12 @@ function createBaseGear(base, cell, index) {
     if (isLevel(cell)) {
         base.level = cell;
     } else if (index == 0 && base.type == '') {
-        base.type = cell;
-    } else if (base.type == 'Weapon' && index == 1) {
+        var values = cell.split('-');
+        base.type = values[0].trim();
+        if(values.length > 1) {
+            base.subtype = values[1].trim();
+        }
+    } else if (base.type == 'Weapon' && base.subtype == '' && index == 1) {
         base.subtype = cell
     } else if (base.name == '' && cell.includes('EP')) {
         base.release = cell;
@@ -119,19 +123,20 @@ function createBaseGear(base, cell, index) {
         base.name = cell;
     } else if (base.name != '' && base.icon == '' && cell.includes('IMAGE')) {
         base.icon = cell.split('"')[1];
-    } else if (base.type != '' && base.name != '' && base.icon != '' && !base.stats.length && !base.materials.length &&
-        (!cell.includes('Craft') && !cell.includes('Crack') && !cell.includes('IMAGE') && !cell.includes('?') && !cell.includes('zeny'))) {
-        var cells = cell.split(',');
-        cells.forEach(value => {
-            base.stats.push(value.trim());
-        });
-    } else if (cell.includes('Craft') || cell.includes('Crack')) {
-        cell.replace('Crack', 'Craft');
-        base.craftLocation = cell.split(':')[1].trim();
-    } else if (cell.includes('zeny') || cell.includes('?')) {
-        base.price = cell;
-    } else if (base.name != '' && base.icon != '' && base.type != '' && base.stats.length) {
-        base.materials.push(cell);
+    } else if (base.name != '' && base.icon != '' && base.type != '') {
+        if (cell.includes('Craft') || cell.includes('Crack')) {
+            cell.replace('Crack', 'Craft');
+            base.craftLocation = cell.split(':')[1].trim();
+        } else if (cell.includes('zeny') || cell.includes('?')) {
+            base.price = cell;
+        } else if (base.stats.length && isMaterial(cell)) {
+            base.materials.push(cell);
+        } else if (!base.materials.length && isNotDifferentThanStats(cell)) {
+            var cells = cell.split(',');
+            cells.forEach(value => {
+                base.stats.push(value.trim());
+            });
+        }
     }
 }
 
@@ -151,7 +156,7 @@ function createGearUpgrades(upgrades, final, cell, step) {
         upgrade.price = cell;
     } else if (cell.includes('Upgrade')) {
         upgrade.upgradeLocation = cell.split(':')[1].trim();
-    } else if (upgrade.step != '' && !upgrade.stats.length && !upgrade.materials.length) {
+    } else if (upgrade.step != '' && !upgrade.stats.length && !upgrade.materials.length && isNotDifferentThanStats(cell)) {
         var cells = cell.split(',');
         cells.forEach(value => {
             upgrade.stats.push(value.trim());
@@ -162,15 +167,15 @@ function createGearUpgrades(upgrades, final, cell, step) {
         } else if (final.name == '') {
             final.name = cell;
         }
-    } else {
+    } else if (isMaterial(cell)) {
         upgrade.materials.push(cell);
     }
 }
 
 function createFinalGear(final, cell) {
-    if(isLevel(cell)) {
+    if (isLevel(cell)) {
         final.level = cell;
-    } else if (!final.stats.length && !final.materials.length) {
+    } else if (!final.stats.length && !final.materials.length && isNotDifferentThanStats(cell)) {
         var cells = cell.split(',');
         cells.forEach(value => {
             final.stats.push(value.trim());
@@ -179,13 +184,30 @@ function createFinalGear(final, cell) {
         final.price = cell;
     } else if (cell.includes("Upgrade")) {
         final.upgradeLocation = cell;
-    } else {
+    } else if (isMaterial(cell)) {
         final.materials.push(cell);
     }
 }
 
 function isLevel(value) {
     return value == "Base" || value == "I" || value == "II" || value == "III" || value == "Final";
+}
+
+function isNotDifferentThanStats(value) {
+    return !value.includes('Craft') &&
+        !value.includes('Crack') &&
+        !value.includes('IMAGE') &&
+        !value.includes('?') &&
+        !value.includes('zeny');
+}
+
+function isMaterial(value) {
+    return /\s{1}x[0-9]{1,9}/.test(value) &&
+        !value.includes(',') &&
+        !value.includes('%') &&
+        !value.includes('+') &&
+        !value.includes('-') &&
+        !value.includes('?');
 }
 
 module.exports = {
