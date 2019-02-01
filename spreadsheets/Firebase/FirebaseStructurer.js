@@ -53,7 +53,7 @@ function createComboReferenceStructure(gear) {
             combo.items.forEach(deepItem => {
                 var itemId = utils.nameToId(deepItem.name);
                 var found = false;
-                comboStructure.items[itemId] = { 
+                comboStructure.items[itemId] = {
                     name: deepItem.name,
                     icon: deepItem.icon,
                     ref: ''
@@ -98,21 +98,185 @@ function createComboReferenceStructure(gear) {
 
 function createMaterialsReferenceStructure(materials) {
     var materialsStructure = {};
-    materials.forEach(material => {
+    materials.forEach(material => {        
+        materialName = material.name;
         var materialObject = {};
-        var quantity = material.substring(material.lastIndexOf('x') + 1).trim();
-        var name = material.substring(0, material.lastIndexOf('x')).trim();
-        var materialId = utils.nameToId(name);
-
+        var materialBroken = utils.breakMaterialName(materialName);
+        var materialId = utils.nameToId(materialBroken.name);
         materialObject['ref'] = `${MATERIALS_PATH}/${materialId}`;
-        materialObject['quantity'] = quantity;
+        materialObject['quantity'] = materialBroken.quantity;
         materialsStructure[materialId] = materialObject;
     });
 
     return materialsStructure;
 }
 
-// ITEMS RELATED
+function createAllItemsStructure(dropCraftStructure, headgearsStructure, upgradeableStructure) {
+    var allItemsStructure = {};
+
+    Object.keys(dropCraftStructure.item).forEach(key => {
+        allItemsStructure[key] = dropCraftStructure.item[key];
+    });
+
+    Object.keys(headgearsStructure.item).forEach(key => {
+        allItemsStructure[key] = headgearsStructure.item[key];
+    });
+
+    Object.keys(upgradeableStructure.base.item).forEach(key => {
+        allItemsStructure[key] = upgradeableStructure.base.item[key];
+    });
+
+    Object.keys(upgradeableStructure.final.item).forEach(key => {
+        allItemsStructure[key] = upgradeableStructure.final.item[key];
+    });
+
+    return allItemsStructure;
+}
+
+function createMaterialsStructure() {
+    var materialStructure = {};
+
+    headgearsList.forEach(gear => {
+        gear.materials.forEach(material => {
+            var materialBroken = utils.breakMaterialName(material.name);
+            var materialId = utils.nameToId(materialBroken.name);
+            if (!(materialId in materialStructure)) {
+                materialStructure[materialId] = {
+                    name: materialBroken.name,
+                    icon: material.image
+                }
+            }
+        });
+    });
+
+    dropCraftGearsList.forEach(gear => {
+        gear.materials.forEach(material => {
+            var materialBroken = utils.breakMaterialName(material.name);
+            var materialId = utils.nameToId(materialBroken.name);
+            if (!(materialId in materialStructure)) {               
+                materialStructure[materialId] = {
+                    name: materialBroken.name,
+                    icon: material.image ? material.image : ''
+                }
+            }
+        });
+    });
+
+    upgradeableGearsList.forEach(gear => {
+        gear.base.materials.forEach(material => {
+            var materialBroken = utils.breakMaterialName(material.name);
+            var materialId = utils.nameToId(materialBroken.name);
+            if (!(materialId in materialStructure)) {
+                materialStructure[materialId] = {
+                    name: materialBroken.name,
+                    icon: material.image ? material.image : ''
+                }
+            }
+        });
+
+        gear.final.materials.forEach(material => {
+            var materialBroken = utils.breakMaterialName(material.name);
+            var materialId = utils.nameToId(materialBroken.name);
+            if (!(materialId in materialStructure)) {
+                materialStructure[materialId] = {
+                    name: materialBroken.name,
+                    icon: material.image ? material.image : ''
+                }
+            }
+        });
+
+        gear.upgrades.forEach(upgrade => {
+            upgrade.materials.forEach(material => {
+                var materialBroken = utils.breakMaterialName(material.name);
+                var materialId = utils.nameToId(materialBroken.name);
+                if (!(materialId in materialStructure)) {
+                    materialStructure[materialId] = {
+                        name: materialBroken.name,
+                        icon: material.image ? material.image : ''
+                    }
+                }
+            });
+        });
+    });
+
+    return materialStructure;
+}
+
+function createDropCraftGearsStructure() {
+    var gearStructure = {
+        item: {},
+        detail: {}
+    }
+
+    dropCraftGearsList.forEach(gear => {
+        var gearId = utils.nameToId(gear.name);
+        var itemStructure = {
+            type: gear.type,
+            subtype: gear.subtype ? gear.subtype : '',
+            icon: gear.icon,
+            name: gear.name,
+            ref: `${DROP_CRAFT_GEARS_PATH.detail}/${gearId}`
+        }
+
+        var materialsStructure = createMaterialsReferenceStructure(gear.materials);
+        var comboStructure = createComboReferenceStructure(gear);
+        var detailStructure = {
+            release: gear.release ? gear.release : '',
+            craftLocation: gear.craftLocation,
+            icon: gear.icon,
+            name: gear.name,
+            type: gear.type,
+            subtype: gear.subtype ? gear.subtype : '',
+            stats: gear.stats,
+            materials: materialsStructure,
+            combo: comboStructure
+        }
+
+        gearStructure.item[gearId] = itemStructure;
+        gearStructure.detail[gearId] = detailStructure;
+    });
+
+    return gearStructure;
+}
+
+function createHeadgearsStructure() {
+    var headgearStructure = {
+        item: {},
+        detail: {}
+    }
+
+    headgearsList.forEach(headgear => {
+        var headgearId = utils.nameToId(headgear.name);
+
+        var itemStructure = {
+            type: headgear.type ? headgear.type: 'Headgear',
+            subtype: headgear.subtype ? headgear.subtype : '',
+            icon: headgear.icon,
+            name: headgear.name,
+            ref: `${HEADGEARS_PATH.detail}/${headgearId}`
+        }
+
+        var materialsStructure = createMaterialsReferenceStructure(headgear.materials);
+        var comboStructure = createComboReferenceStructure(headgear);
+        var detailStructure = {
+            achievment: headgear.achievment ? headgear.achievment : '',
+            craftLocation: headgear.craftLocation,
+            icon: headgear.icon,
+            name: headgear.name,
+            type: headgear.type ? headgear.type: 'Headgear',
+            subtype: headgear.subtype ? headgear.subtype : '',
+            stats: headgear.stats,
+            materials: materialsStructure,
+            combo: comboStructure
+        }
+
+        headgearStructure.item[headgearId] = itemStructure;
+        headgearStructure.detail[headgearId] = detailStructure;
+    });
+
+    return headgearStructure;
+}
+
 function createBaseUpgradeableGearStructure(gear, baseStructure) {
     var base = gear.base;
     var final = gear.final;
@@ -180,7 +344,7 @@ function createFinalUpgradeableGearStructure(gear, finalStructure) {
 }
 
 function createUpgradesUpgradeableGearStructure(gear, upgradesStructure) {
-    var base = gear.base;  
+    var base = gear.base;
     var upgrades = gear.upgrades;
 
     var baseGearId = utils.nameToId(base.name);
@@ -228,23 +392,23 @@ module.exports = {
         saveLists(listOfItems);
     },
 
-    getAllItemsStructure: (lists) => {
-        console.log(lists.length);
+    getAllItemsStructure: (dropCraftStructure, headgearsStructure, upgradeableStructure) => {
+        return createAllItemsStructure(dropCraftStructure, headgearsStructure, upgradeableStructure);
     },
 
     getUpgradeableGearsStructure: () => {
         return createUpgradeableGearStructure();
     },
 
-    getDropCraftGearsStructure: (lists) => {
-        console.log(lists.length);
+    getDropCraftGearsStructure: () => {
+        return createDropCraftGearsStructure();
     },
 
-    getHeadgearsStructure: (lists) => {
-        console.log(lists.length);
+    getHeadgearsStructure: () => {
+        return createHeadgearsStructure();
     },
 
-    getMaterialsStructure: (lists) => {
-        console.log(lists.length);
+    getMaterialsStructure: () => {
+        return createMaterialsStructure();
     },
 }

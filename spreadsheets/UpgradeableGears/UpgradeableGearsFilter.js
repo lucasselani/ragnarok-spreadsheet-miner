@@ -130,7 +130,10 @@ function createBaseGear(base, cell, index) {
         } else if (cell.includes('zeny') || cell.includes('?')) {
             base.price = cell;
         } else if (base.stats.length && isMaterial(cell)) {
-            base.materials.push(cell);
+            base.materials.push({
+                name: cell,
+                icon: ''
+            });
         } else if (!base.materials.length && isNotDifferentThanStats(cell)) {
             var cells = cell.split(',');
             cells.forEach(value => {
@@ -168,7 +171,10 @@ function createGearUpgrades(upgrades, final, cell, step) {
             final.name = cell;
         }
     } else if (isMaterial(cell)) {
-        upgrade.materials.push(cell);
+        upgrade.materials.push({
+            name: cell,
+            icon: ''
+        });
     }
 }
 
@@ -185,7 +191,10 @@ function createFinalGear(final, cell) {
     } else if (cell.includes("Upgrade")) {
         final.upgradeLocation = cell;
     } else if (isMaterial(cell)) {
-        final.materials.push(cell);
+        final.materials.push({
+            name: cell,
+            icon: ''
+        });
     }
 }
 

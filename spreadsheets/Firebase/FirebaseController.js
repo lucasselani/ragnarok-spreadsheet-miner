@@ -16,12 +16,14 @@ var config = {
 };
 
 function sendToFirebase(items, name) {
-    firebase.database().ref(name).set(items).then((result, err) => {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log(`Push successfully to ${name}`);
-        }
+    return new Promise((resolve, reject) => {
+        firebase.database().ref(name).set(items).then((result, err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(`Push successfully to ${name}`);
+            }
+        });
     });
 }
 
@@ -33,6 +35,22 @@ Promise.all([
     setCombo.getSetComboList()
 ]).then((listOfItems) => {
     firebaseStructurer.saveAllItems(listOfItems);
-    var items = firebaseStructurer.getUpgradeableGearsStructure();
-    sendToFirebase(items, 'upgradeable_gears_test');
+
+    var upgradeableGearsStructure = firebaseStructurer.getUpgradeableGearsStructure();    
+    var dropCraftGearsStructure = firebaseStructurer.getDropCraftGearsStructure();
+    var headgearsStructure = firebaseStructurer.getHeadgearsStructure();
+    var materialsStructure = firebaseStructurer.getMaterialsStructure();
+    var allItemsStructure = firebaseStructurer.getAllItemsStructure(dropCraftGearsStructure, headgearsStructure, upgradeableGearsStructure);
+
+    Promise.all([
+        sendToFirebase(upgradeableGearsStructure, 'upgradeable_gears'),
+        sendToFirebase(dropCraftGearsStructure, 'drop_craft_gears'),
+        sendToFirebase(headgearsStructure, 'headgears'),
+        sendToFirebase(materialsStructure, 'materials'),
+        sendToFirebase(allItemsStructure, 'all_items')
+    ]).then(result => {
+        result.forEach(answer => {
+            console.log(answer);
+        });
+    });
 });
